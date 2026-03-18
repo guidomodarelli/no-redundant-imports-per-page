@@ -10,6 +10,7 @@ For every page stylesheet entry point discovered under `pages` or `nordic-pages`
 2. Builds the import tree with DFS
 3. Canonicalizes every resolved file path
 4. Reports the import that reintroduces a previously visited stylesheet in the same page tree
+5. Adds a page-level diagnostic when the redundant import happens in a descendant stylesheet reached by that page
 
 ## Examples
 
@@ -39,6 +40,11 @@ See [docs/analysis-flow.md](docs/analysis-flow.md) for a visual walkthrough of t
 // BranchB/styles.scss
 @import '../Shared/styles';
 ```
+
+When this happens, the rule reports:
+
+- the redundant import in `BranchB/styles.scss`
+- a page-level diagnostic in the page stylesheet that imported the `BranchB` branch
 
 #### 3. Duplicate inside a reusable component
 
@@ -189,6 +195,8 @@ module.exports = [
 - The rule always resolves `@root` to the current ESLint `cwd`
 - It also reads `package.json#_moduleAliases` automatically, then applies any explicit `aliases` passed in the rule config as the final override
 - `node_modules` imports are ignored by default; enable them with `includeNodeModules: true` in the rule config
+- When a redundant import happens in a descendant component, the rule reports it both in the descendant stylesheet and in the page stylesheet that reached it
+- Redundancies resolved through `node_modules` are only added to the page stylesheet when `reportNodeModulesInPage: true`
 - The rule is designed for projects still using `@import`
 - It ignores `@import url(...)` and conditional imports by default
 - It compares canonical absolute paths to avoid false negatives from alias or relative path variations
@@ -198,6 +206,8 @@ module.exports = [
 By default, the rule does not resolve stylesheet imports through `node_modules`.
 
 If you want those imports to participate in duplicate detection, enable `includeNodeModules: true`.
+
+If you also want redundancies from `node_modules` descendants to be surfaced in the page stylesheet, enable `reportNodeModulesInPage: true`.
 
 ### ESLint 8
 
@@ -213,6 +223,7 @@ module.exports = {
           'error',
           {
             includeNodeModules: true,
+            reportNodeModulesInPage: true,
           },
         ],
       },
@@ -238,6 +249,7 @@ module.exports = [
         'error',
         {
           includeNodeModules: true,
+          reportNodeModulesInPage: true,
         },
       ],
     },

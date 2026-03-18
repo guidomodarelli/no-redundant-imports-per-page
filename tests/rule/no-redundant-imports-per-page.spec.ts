@@ -81,13 +81,17 @@ describe('no-redundant-imports-per-page rule', () => {
   it('reports direct duplicate imports inside a page entry', async () => {
     const messages = await lintFile('app/pages/userCreate/styles.scss');
 
-    expect(messages).toHaveLength(2);
-    expect(messages[0]?.line).toBe(3);
+    expect(messages).toHaveLength(3);
+    expect(messages[0]?.line).toBe(2);
     expect(messages[0]?.message).toBe(
+      `Page entry "${getFixturePath('app/pages/userCreate/styles.scss')}" reaches redundant style import "~@root/app/styles/common" in "${getFixturePath('app/components/SearchDropdown/styles.scss')}": resolves to "${getFixturePath('app/styles/_common.scss')}" and was already included from "${getFixturePath('app/pages/userCreate/styles.scss')}:1".`,
+    );
+    expect(messages[1]?.line).toBe(3);
+    expect(messages[1]?.message).toBe(
       `Redundant style import "@root/app/components/SearchDropdown/styles": resolves to "${getFixturePath('app/components/SearchDropdown/styles.scss')}" and was already included for page entry "${getFixturePath('app/pages/userCreate/styles.scss')}". First included from "${getFixturePath('app/pages/userCreate/styles.scss')}:2".`,
     );
-    expect(messages[1]?.line).toBe(5);
-    expect(messages[1]?.message).toBe(
+    expect(messages[2]?.line).toBe(5);
+    expect(messages[2]?.message).toBe(
       `Redundant style import "~@root/app/components/UserRolesCard/styles": resolves to "${getFixturePath('app/components/UserRolesCard/styles.scss')}" and was already included for page entry "${getFixturePath('app/pages/userCreate/styles.scss')}". First included from "${getFixturePath('app/pages/userCreate/styles.scss')}:4".`,
     );
   });
@@ -99,6 +103,16 @@ describe('no-redundant-imports-per-page rule', () => {
     expect(messages[0]?.line).toBe(1);
     expect(messages[0]?.message).toBe(
       `Redundant style import "../Shared/styles": resolves to "${getFixturePath('app/components/Shared/styles.scss')}" and was already included for page entry "${getFixturePath('app/pages/transitive/styles.scss')}". First included from "${getFixturePath('app/components/BranchA/styles.scss')}:1".`,
+    );
+  });
+
+  it('reports transitive duplicates from the page entry that reaches them', async () => {
+    const messages = await lintFile('app/pages/transitive/styles.scss');
+
+    expect(messages).toHaveLength(1);
+    expect(messages[0]?.line).toBe(2);
+    expect(messages[0]?.message).toBe(
+      `Page entry "${getFixturePath('app/pages/transitive/styles.scss')}" reaches redundant style import "../Shared/styles" in "${getFixturePath('app/components/BranchB/styles.scss')}": resolves to "${getFixturePath('app/components/Shared/styles.scss')}" and was already included from "${getFixturePath('app/components/BranchA/styles.scss')}:1".`,
     );
   });
 
@@ -139,6 +153,49 @@ describe('no-redundant-imports-per-page rule', () => {
     expect(messages[0]?.message).toBe(
       `Redundant style import "~@andes/button/index": resolves to "${getFixturePath('node_modules/@andes/button/index.scss')}" and was already included for page entry "${getFixturePath('app/pages/nodeModules/styles.scss')}". First included from "${getFixturePath('app/components/ButtonWrapper/styles.scss')}:1".`,
     );
+  });
+
+  it('reports node_modules duplicates inside the second component when enabled explicitly', async () => {
+    const messages = await lintFileWithFlatRuleOptions(
+      ['app/components/ButtonWrapperDuplicate/styles.scss'],
+      { includeNodeModules: true },
+    );
+
+    expect(messages).toHaveLength(1);
+    expect(messages[0]?.line).toBe(1);
+    expect(messages[0]?.message).toBe(
+      `Redundant style import "~@andes/button/index": resolves to "${getFixturePath('node_modules/@andes/button/index.scss')}" and was already included for page entry "${getFixturePath('app/pages/nodeModulesBranches/styles.scss')}". First included from "${getFixturePath('app/components/ButtonWrapper/styles.scss')}:1".`,
+    );
+  });
+
+  it('does not report node_modules duplicates from the page entry unless explicitly enabled', async () => {
+    const messages = await lintFileWithFlatRuleOptions(
+      ['app/pages/nodeModulesBranches/styles.scss'],
+      { includeNodeModules: true },
+    );
+
+    expect(messages).toHaveLength(0);
+  });
+
+  it('reports node_modules duplicates from the page entry when page aggregation is explicitly enabled', async () => {
+    const messages = await lintFileWithFlatRuleOptions(
+      ['app/pages/nodeModulesBranches/styles.scss'],
+      { includeNodeModules: true, reportNodeModulesInPage: true },
+    );
+
+    expect(messages).toHaveLength(1);
+    expect(messages[0]?.line).toBe(2);
+    expect(messages[0]?.message).toBe(
+      `Page entry "${getFixturePath('app/pages/nodeModulesBranches/styles.scss')}" reaches redundant style import "~@andes/button/index" in "${getFixturePath('app/components/ButtonWrapperDuplicate/styles.scss')}": resolves to "${getFixturePath('node_modules/@andes/button/index.scss')}" and was already included from "${getFixturePath('app/components/ButtonWrapper/styles.scss')}:1".`,
+    );
+  });
+
+  it('does not report node_modules duplicates from descendant components by default', async () => {
+    const pageMessages = await lintFile('app/pages/nodeModulesBranches/styles.scss');
+    const componentMessages = await lintFile('app/components/ButtonWrapperDuplicate/styles.scss');
+
+    expect(pageMessages).toHaveLength(0);
+    expect(componentMessages).toHaveLength(0);
   });
 
   it('reads aliases from package.json _moduleAliases', async () => {

@@ -14,12 +14,24 @@ import type {
   StyleFileInfo,
 } from './types';
 
+interface RootPageImportContext {
+  rootPageImporterFile: string;
+  rootPageImportText: string;
+  rootPageImportLoc: {
+    line: number;
+    column: number;
+    endLine?: number;
+    endColumn?: number;
+  };
+}
+
 export const DEFAULT_RULE_OPTIONS: Omit<NormalizedRuleOptions, 'aliases'> = {
   pageDirNames: ['pages', 'nordic-pages'],
   pageStyleNames: ['styles', 'index'],
   styleExtensions: ['.scss', '.sass', '.css'],
   pageModuleNames: ['index', 'view'],
   includeNodeModules: false,
+  reportNodeModulesInPage: false,
   analyzeConditionalImports: false,
 };
 
@@ -61,9 +73,14 @@ export const normalizeRuleOptions = (
     ...(ruleOptions?.aliases ?? {}),
   },
   includeNodeModules: ruleOptions?.includeNodeModules ?? DEFAULT_RULE_OPTIONS.includeNodeModules,
+  reportNodeModulesInPage:
+    ruleOptions?.reportNodeModulesInPage ?? DEFAULT_RULE_OPTIONS.reportNodeModulesInPage,
   analyzeConditionalImports:
     ruleOptions?.analyzeConditionalImports ?? DEFAULT_RULE_OPTIONS.analyzeConditionalImports,
 });
+
+const isNodeModulesFile = (filePath: string): boolean =>
+  filePath.split(path.posix.sep).includes('node_modules');
 
 const getStyleFileInfo = (filePath: string, analysisState: AnalysisState): StyleFileInfo => {
   const canonicalFilePath = canonicalizeFilePath(filePath);
@@ -157,7 +174,7 @@ const analyzeEntryPoint = (
   const firstSeen = new Map<string, ImportOccurrence>();
   const activeStack = new Set<string>();
 
-  const walk = (currentFile: string): void => {
+  const walk = (currentFile: string, rootPageImportContext: RootPageImportContext | null): void => {
     const styleFileInfo = getStyleFileInfo(currentFile, analysisState);
     activeStack.add(currentFile);
 
@@ -186,30 +203,57 @@ const analyzeEntryPoint = (
         continue;
       }
 
+      const currentRootPageImportContext = rootPageImportContext ?? {
+        rootPageImporterFile: entryFile,
+        rootPageImportText: importEdge.importText,
+        rootPageImportLoc: importEdge.loc,
+      };
+
       const currentOccurrence: ImportOccurrence = {
         importerFile: currentFile,
         importText: importEdge.importText,
         resolvedFile,
         loc: importEdge.loc,
+        ...currentRootPageImportContext,
       };
 
       const firstOccurrence = firstSeen.get(resolvedFile);
 
       if (firstOccurrence) {
         pushDiagnostic(analysisState, {
+          kind: 'local',
           file: currentFile,
           loc: importEdge.loc,
           entryFile,
           importText: importEdge.importText,
           resolvedFile,
+          redundantImporterFile: currentFile,
           firstSeen: firstOccurrence,
           cycle: activeStack.has(resolvedFile),
         });
+
+        if (
+          currentFile !== entryFile
+          && (!isNodeModulesFile(resolvedFile) || options.reportNodeModulesInPage)
+        ) {
+          pushDiagnostic(analysisState, {
+            kind: 'pageAggregate',
+            file: entryFile,
+            loc: currentOccurrence.rootPageImportLoc,
+            entryFile,
+            importText: importEdge.importText,
+            resolvedFile,
+            redundantImporterFile: currentFile,
+            firstSeen: firstOccurrence,
+            cycle: activeStack.has(resolvedFile),
+          });
+        }
+
         continue;
       }
 
       firstSeen.set(resolvedFile, currentOccurrence);
-      walk(resolvedFile);
+      walk(resolvedFile, currentRootPageImportContext);
     }
 
     activeStack.delete(currentFile);
@@ -223,9 +267,15 @@ const analyzeEntryPoint = (
       line: 1,
       column: 1,
     },
+    rootPageImporterFile: entryFile,
+    rootPageImportText: '<entry>',
+    rootPageImportLoc: {
+      line: 1,
+      column: 1,
+    },
   });
 
-  walk(entryFile);
+  walk(entryFile, null);
   analysisState.analyzedEntries.add(entryFile);
 };
 

@@ -23,14 +23,19 @@ export interface ImportOccurrence {
   importText: string;
   resolvedFile: string;
   loc: SourceLocation;
+  rootPageImporterFile: string;
+  rootPageImportText: string;
+  rootPageImportLoc: SourceLocation;
 }
 
 export interface Diagnostic {
+  kind: 'local' | 'pageAggregate';
   file: string;
   loc: SourceLocation;
   entryFile: string;
   importText: string;
   resolvedFile: string;
+  redundantImporterFile: string;
   firstSeen: ImportOccurrence;
   cycle: boolean;
 }
@@ -52,6 +57,7 @@ export interface NormalizedRuleOptions {
   pageModuleNames: string[];
   aliases: Record<string, string>;
   includeNodeModules: boolean;
+  reportNodeModulesInPage: boolean;
   analyzeConditionalImports: boolean;
 }
 
@@ -62,5 +68,6 @@ export type RuleOptions = Partial<{
   pageModuleNames: string[];
   aliases: Record<string, string>;
   includeNodeModules: boolean;
+  reportNodeModulesInPage: boolean;
   analyzeConditionalImports: boolean;
 }>;

@@ -50,6 +50,9 @@ const rule: Rule.RuleModule = {
           includeNodeModules: {
             type: 'boolean',
           },
+          reportNodeModulesInPage: {
+            type: 'boolean',
+          },
           analyzeConditionalImports: {
             type: 'boolean',
           },
@@ -59,6 +62,8 @@ const rule: Rule.RuleModule = {
     messages: {
       redundantImport:
         'Redundant style import "{{importText}}": resolves to "{{resolvedFile}}" and was already included for page entry "{{entryFile}}". First included from "{{firstImporter}}:{{firstLine}}".{{cycleSuffix}}',
+      redundantImportViaPage:
+        'Page entry "{{entryFile}}" reaches redundant style import "{{importText}}" in "{{redundantImporter}}": resolves to "{{resolvedFile}}" and was already included from "{{firstImporter}}:{{firstLine}}".{{cycleSuffix}}',
     },
   },
   create(context) {
@@ -78,6 +83,10 @@ const rule: Rule.RuleModule = {
         const diagnostics = getDiagnosticsForFile(cwd, filename, options);
 
         for (const diagnostic of diagnostics) {
+          const messageId = diagnostic.kind === 'pageAggregate'
+            ? 'redundantImportViaPage'
+            : 'redundantImport';
+
           context.report({
             node,
             loc: {
@@ -90,11 +99,12 @@ const rule: Rule.RuleModule = {
                 column: Math.max(0, (diagnostic.loc.endColumn ?? diagnostic.loc.column) - 1),
               },
             },
-            messageId: 'redundantImport',
+            messageId,
             data: {
               importText: diagnostic.importText,
               resolvedFile: toProjectRelativePath(diagnostic.resolvedFile),
               entryFile: toProjectRelativePath(diagnostic.entryFile),
+              redundantImporter: toProjectRelativePath(diagnostic.redundantImporterFile),
               firstImporter: toProjectRelativePath(diagnostic.firstSeen.importerFile),
               firstLine: String(diagnostic.firstSeen.loc.line),
               cycleSuffix: diagnostic.cycle ? ' Cycle detected in the dependency chain.' : '',
