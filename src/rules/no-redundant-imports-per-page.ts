@@ -50,6 +50,14 @@ const rule: Rule.RuleModule = {
           includeNodeModules: {
             type: 'boolean',
           },
+          mode: {
+            type: 'string',
+            enum: ['simple', 'advanced'],
+          },
+          nodeModulesDepth: {
+            type: 'integer',
+            minimum: 0,
+          },
           reportNodeModulesInPage: {
             type: 'boolean',
           },

@@ -57,6 +57,8 @@ export interface NormalizedRuleOptions {
   pageModuleNames: string[];
   aliases: Record<string, string>;
   includeNodeModules: boolean;
+  mode: 'simple' | 'advanced';
+  nodeModulesDepth: number;
   reportNodeModulesInPage: boolean;
   analyzeConditionalImports: boolean;
 }
@@ -68,6 +70,8 @@ export type RuleOptions = Partial<{
   pageModuleNames: string[];
   aliases: Record<string, string>;
   includeNodeModules: boolean;
+  mode: 'simple' | 'advanced';
+  nodeModulesDepth: number;
   reportNodeModulesInPage: boolean;
   analyzeConditionalImports: boolean;
 }>;

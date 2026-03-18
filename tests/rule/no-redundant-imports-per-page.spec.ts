@@ -168,6 +168,59 @@ describe('no-redundant-imports-per-page rule', () => {
     );
   });
 
+  it('defaults to simple mode for node_modules analysis when enabled', async () => {
+    const messages = await lintFileWithFlatRuleOptions(
+      ['app/components/OneLevelSharedConsumer/styles.scss'],
+      { includeNodeModules: true },
+    );
+
+    expect(messages).toHaveLength(0);
+  });
+
+  it('does not detect internal node_modules duplicates in simple mode with depth 0', async () => {
+    const messages = await lintFileWithFlatRuleOptions(
+      ['app/components/OneLevelSharedConsumer/styles.scss'],
+      { includeNodeModules: true, mode: 'simple', nodeModulesDepth: 0 },
+    );
+
+    expect(messages).toHaveLength(0);
+  });
+
+  it('detects one-level internal node_modules duplicates in simple mode with depth 1', async () => {
+    const messages = await lintFileWithFlatRuleOptions(
+      ['app/components/OneLevelSharedConsumer/styles.scss'],
+      { includeNodeModules: true, mode: 'simple', nodeModulesDepth: 1 },
+    );
+
+    expect(messages).toHaveLength(1);
+    expect(messages[0]?.line).toBe(1);
+    expect(messages[0]?.message).toBe(
+      `Redundant style import "~@test/one-level/shared": resolves to "${getFixturePath('node_modules/@test/one-level/shared.scss')}" and was already included for page entry "${getFixturePath('app/pages/nodeModulesOneLevel/styles.scss')}". First included from "${getFixturePath('node_modules/@test/one-level/index.scss')}:1".`,
+    );
+  });
+
+  it('does not detect deeper node_modules duplicates in simple mode when depth is insufficient', async () => {
+    const messages = await lintFileWithFlatRuleOptions(
+      ['app/components/DeepChainSharedConsumer/styles.scss'],
+      { includeNodeModules: true, mode: 'simple', nodeModulesDepth: 1 },
+    );
+
+    expect(messages).toHaveLength(0);
+  });
+
+  it('detects deeper node_modules duplicates in advanced mode', async () => {
+    const messages = await lintFileWithFlatRuleOptions(
+      ['app/components/DeepChainSharedConsumer/styles.scss'],
+      { includeNodeModules: true, mode: 'advanced' },
+    );
+
+    expect(messages).toHaveLength(1);
+    expect(messages[0]?.line).toBe(1);
+    expect(messages[0]?.message).toBe(
+      `Redundant style import "~@test/deep-chain/shared": resolves to "${getFixturePath('node_modules/@test/deep-chain/shared.scss')}" and was already included for page entry "${getFixturePath('app/pages/nodeModulesDeepChain/styles.scss')}". First included from "${getFixturePath('node_modules/@test/deep-chain/layer.scss')}:1".`,
+    );
+  });
+
   it('does not report node_modules duplicates from the page entry unless explicitly enabled', async () => {
     const messages = await lintFileWithFlatRuleOptions(
       ['app/pages/nodeModulesBranches/styles.scss'],
@@ -180,7 +233,7 @@ describe('no-redundant-imports-per-page rule', () => {
   it('reports node_modules duplicates from the page entry when page aggregation is explicitly enabled', async () => {
     const messages = await lintFileWithFlatRuleOptions(
       ['app/pages/nodeModulesBranches/styles.scss'],
-      { includeNodeModules: true, reportNodeModulesInPage: true },
+      { includeNodeModules: true, reportNodeModulesInPage: true, mode: 'simple' },
     );
 
     expect(messages).toHaveLength(1);

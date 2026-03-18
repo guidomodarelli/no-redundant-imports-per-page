@@ -31,6 +31,8 @@ export const DEFAULT_RULE_OPTIONS: Omit<NormalizedRuleOptions, 'aliases'> = {
   styleExtensions: ['.scss', '.sass', '.css'],
   pageModuleNames: ['index', 'view'],
   includeNodeModules: false,
+  mode: 'simple',
+  nodeModulesDepth: 0,
   reportNodeModulesInPage: false,
   analyzeConditionalImports: false,
 };
@@ -73,6 +75,8 @@ export const normalizeRuleOptions = (
     ...(ruleOptions?.aliases ?? {}),
   },
   includeNodeModules: ruleOptions?.includeNodeModules ?? DEFAULT_RULE_OPTIONS.includeNodeModules,
+  mode: ruleOptions?.mode ?? DEFAULT_RULE_OPTIONS.mode,
+  nodeModulesDepth: ruleOptions?.nodeModulesDepth ?? DEFAULT_RULE_OPTIONS.nodeModulesDepth,
   reportNodeModulesInPage:
     ruleOptions?.reportNodeModulesInPage ?? DEFAULT_RULE_OPTIONS.reportNodeModulesInPage,
   analyzeConditionalImports:
@@ -81,6 +85,45 @@ export const normalizeRuleOptions = (
 
 const isNodeModulesFile = (filePath: string): boolean =>
   filePath.split(path.posix.sep).includes('node_modules');
+
+const getNextNodeModulesDepth = (
+  currentFile: string,
+  resolvedFile: string,
+  currentNodeModulesDepth: number | null,
+): number | null => {
+  if (!isNodeModulesFile(resolvedFile)) {
+    return null;
+  }
+
+  if (!isNodeModulesFile(currentFile)) {
+    return 0;
+  }
+
+  return (currentNodeModulesDepth ?? 0) + 1;
+};
+
+const shouldAnalyzeResolvedImport = (
+  currentFile: string,
+  resolvedFile: string,
+  currentNodeModulesDepth: number | null,
+  options: NormalizedRuleOptions,
+): boolean => {
+  if (!isNodeModulesFile(resolvedFile)) {
+    return true;
+  }
+
+  if (options.mode === 'advanced') {
+    return true;
+  }
+
+  const nextNodeModulesDepth = getNextNodeModulesDepth(
+    currentFile,
+    resolvedFile,
+    currentNodeModulesDepth,
+  );
+
+  return nextNodeModulesDepth !== null && nextNodeModulesDepth <= options.nodeModulesDepth;
+};
 
 const getStyleFileInfo = (filePath: string, analysisState: AnalysisState): StyleFileInfo => {
   const canonicalFilePath = canonicalizeFilePath(filePath);
@@ -119,7 +162,7 @@ const indexEntryPointReachability = (
 ): void => {
   const visited = new Set<string>();
 
-  const walk = (currentFile: string): void => {
+  const walk = (currentFile: string, currentNodeModulesDepth: number | null): void => {
     if (visited.has(currentFile)) {
       return;
     }
@@ -154,11 +197,18 @@ const indexEntryPointReachability = (
         continue;
       }
 
-      walk(resolvedFile);
+      if (!shouldAnalyzeResolvedImport(currentFile, resolvedFile, currentNodeModulesDepth, options)) {
+        continue;
+      }
+
+      walk(
+        resolvedFile,
+        getNextNodeModulesDepth(currentFile, resolvedFile, currentNodeModulesDepth),
+      );
     }
   };
 
-  walk(entryFile);
+  walk(entryFile, null);
 };
 
 const analyzeEntryPoint = (
@@ -174,7 +224,11 @@ const analyzeEntryPoint = (
   const firstSeen = new Map<string, ImportOccurrence>();
   const activeStack = new Set<string>();
 
-  const walk = (currentFile: string, rootPageImportContext: RootPageImportContext | null): void => {
+  const walk = (
+    currentFile: string,
+    rootPageImportContext: RootPageImportContext | null,
+    currentNodeModulesDepth: number | null,
+  ): void => {
     const styleFileInfo = getStyleFileInfo(currentFile, analysisState);
     activeStack.add(currentFile);
 
@@ -200,6 +254,10 @@ const analyzeEntryPoint = (
       );
 
       if (!resolvedFile) {
+        continue;
+      }
+
+      if (!shouldAnalyzeResolvedImport(currentFile, resolvedFile, currentNodeModulesDepth, options)) {
         continue;
       }
 
@@ -253,7 +311,11 @@ const analyzeEntryPoint = (
       }
 
       firstSeen.set(resolvedFile, currentOccurrence);
-      walk(resolvedFile, currentRootPageImportContext);
+      walk(
+        resolvedFile,
+        currentRootPageImportContext,
+        getNextNodeModulesDepth(currentFile, resolvedFile, currentNodeModulesDepth),
+      );
     }
 
     activeStack.delete(currentFile);
@@ -275,7 +337,7 @@ const analyzeEntryPoint = (
     },
   });
 
-  walk(entryFile, null);
+  walk(entryFile, null, null);
   analysisState.analyzedEntries.add(entryFile);
 };
 
