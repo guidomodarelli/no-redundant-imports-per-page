@@ -1,7 +1,7 @@
 const toPseudoJavascript = (source: string): string => {
-  const lines = source.split('\n').map((line) => `//${line}`);
+  const lineCount = source === '' ? 0 : source.split('\n').length;
 
-  return `${lines.join('\n')}\nexport default null;\n`;
+  return `${'\n'.repeat(lineCount)}export default null;\n`;
 };
 
 export const stylesheetProcessor = {

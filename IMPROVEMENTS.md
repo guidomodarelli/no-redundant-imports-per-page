@@ -10,7 +10,6 @@ Después, hay mejoras más puntuales y bastante concretas:
 - La resolución de archivos prueba muchos candidatos con `existsSync` + `statSync` para cada import, en [resolver.ts](/Users/gmodarelli/ghq/projects/no-redundant-imports-per-page/src/core/resolver.ts#L75). Funciona bien, pero en repos grandes puede pegar. Ahí se puede mejorar cacheando también los “candidate resolutions” negativos y positivos por `targetPath`.
 - En `resolveStyleImport(...)` se vuelve a canonicalizar el `importerFile` al construir la key del cache en [resolver.ts](/Users/gmodarelli/ghq/projects/no-redundant-imports-per-page/src/core/resolver.ts#L117). Como en casi todo el flujo ya trabajás con paths canonicalizados, podrías evitar esa operación repetida.
 - El discovery usa `fast-glob` más varios `existsSync` para encontrar el sibling `index|view`, en [discovery.ts](/Users/gmodarelli/ghq/projects/no-redundant-imports-per-page/src/core/discovery.ts#L54). No parece el cuello principal, pero podría cachearse por directorio si el workspace es muy grande.
-- El processor convierte todo el SCSS a pseudo-JS comentando línea por línea, en [stylesheet.ts](/Users/gmodarelli/ghq/projects/no-redundant-imports-per-page/src/processor/stylesheet.ts#L1). No parece el mayor costo, pero sí mete trabajo y memoria extra por archivo. Se puede simplificar si solo necesitás conservar líneas para que ESLint ejecute la regla.
 
 Si tuviera que priorizar por retorno real, haría esto:
 1. evitar reanalizar workspace completo cuando solo cambia un archivo;
