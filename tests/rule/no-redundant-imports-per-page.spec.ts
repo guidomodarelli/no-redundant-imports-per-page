@@ -25,6 +25,39 @@ const lintFile = async (...segments: string[]) => {
   return results[0]?.messages ?? [];
 };
 
+const lintFileWithFlatRuleOptions = async (
+  segments: string[],
+  ruleOptions: Record<string, unknown>,
+) => {
+  clearAnalysisCache();
+
+  const eslint = new ESLint({
+    cwd: workspaceRoot,
+    overrideConfigFile: true,
+    overrideConfig: [
+      {
+        files: ['**/*.{scss,sass,css}'],
+        languageOptions: {
+          ecmaVersion: 2020,
+          sourceType: 'module',
+        },
+        plugins: {
+          'no-redundant-imports-per-page': plugin,
+        },
+        processor: 'no-redundant-imports-per-page/stylesheet',
+        rules: {
+          'no-redundant-imports-per-page/no-redundant-imports-per-page': ['error', ruleOptions],
+        },
+      },
+    ] as any,
+  });
+
+  const targetFile = path.join(...segments);
+  const results = await eslint.lintFiles([targetFile]);
+
+  return results[0]?.messages ?? [];
+};
+
 const lintFileWithLegacyConfig = async (...segments: string[]) => {
   clearAnalysisCache();
 
@@ -89,8 +122,17 @@ describe('no-redundant-imports-per-page rule', () => {
     );
   });
 
-  it('reports duplicates that come from node_modules imports', async () => {
+  it('ignores duplicates that only resolve through node_modules by default', async () => {
     const messages = await lintFile('app/pages/nodeModules/styles.scss');
+
+    expect(messages).toHaveLength(0);
+  });
+
+  it('reports duplicates that come from node_modules imports when enabled explicitly', async () => {
+    const messages = await lintFileWithFlatRuleOptions(
+      ['app/pages/nodeModules/styles.scss'],
+      { includeNodeModules: true },
+    );
 
     expect(messages).toHaveLength(1);
     expect(messages[0]?.line).toBe(2);

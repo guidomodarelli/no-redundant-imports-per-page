@@ -188,6 +188,59 @@ module.exports = [
 
 - The rule always resolves `@root` to the current ESLint `cwd`
 - It also reads `package.json#_moduleAliases` automatically, then applies any explicit `aliases` passed in the rule config as the final override
+- `node_modules` imports are ignored by default; enable them with `includeNodeModules: true` in the rule config
 - The rule is designed for projects still using `@import`
 - It ignores `@import url(...)` and conditional imports by default
 - It compares canonical absolute paths to avoid false negatives from alias or relative path variations
+
+## Enabling `node_modules` resolution
+
+By default, the rule does not resolve stylesheet imports through `node_modules`.
+
+If you want those imports to participate in duplicate detection, enable `includeNodeModules: true`.
+
+### ESLint 8
+
+```js
+module.exports = {
+  plugins: ['no-redundant-imports-per-page'],
+  overrides: [
+    {
+      files: ['**/*.{scss,sass,css}'],
+      processor: 'no-redundant-imports-per-page/stylesheet',
+      rules: {
+        'no-redundant-imports-per-page/no-redundant-imports-per-page': [
+          'error',
+          {
+            includeNodeModules: true,
+          },
+        ],
+      },
+    },
+  ],
+};
+```
+
+### ESLint 9 flat config
+
+```js
+const plugin = require('no-redundant-imports-per-page');
+
+module.exports = [
+  {
+    files: ['**/*.{scss,sass,css}'],
+    plugins: {
+      'no-redundant-imports-per-page': plugin,
+    },
+    processor: 'no-redundant-imports-per-page/stylesheet',
+    rules: {
+      'no-redundant-imports-per-page/no-redundant-imports-per-page': [
+        'error',
+        {
+          includeNodeModules: true,
+        },
+      ],
+    },
+  },
+];
+```
