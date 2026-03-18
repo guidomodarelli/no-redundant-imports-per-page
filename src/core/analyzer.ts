@@ -30,10 +30,10 @@ export const DEFAULT_RULE_OPTIONS: Omit<NormalizedRuleOptions, 'aliases'> = {
   pageStyleNames: ['styles', 'index'],
   styleExtensions: ['.scss', '.sass', '.css'],
   pageModuleNames: ['index', 'view'],
-  includeNodeModules: false,
+  includeNodeModules: true,
   mode: 'simple',
   nodeModulesDepth: 0,
-  reportNodeModulesInPage: false,
+  reportNodeModulesInPage: true,
   analyzeConditionalImports: false,
 };
 

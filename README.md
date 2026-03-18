@@ -194,28 +194,28 @@ module.exports = [
 
 - The rule always resolves `@root` to the current ESLint `cwd`
 - It also reads `package.json#_moduleAliases` automatically, then applies any explicit `aliases` passed in the rule config as the final override
-- `node_modules` imports are ignored by default; enable them with `includeNodeModules: true` in the rule config
-- When `includeNodeModules: true`, `mode: "simple"` is the default for `node_modules` analysis
+- `node_modules` imports are analyzed by default
+- `mode: "simple"` is the default for `node_modules` analysis
 - `nodeModulesDepth` only applies in `mode: "simple"` and defaults to `0`
 - When a redundant import happens in a descendant component, the rule reports it both in the descendant stylesheet and in the page stylesheet that reached it
-- Redundancies resolved through `node_modules` are only added to the page stylesheet when `reportNodeModulesInPage: true`
+- Redundancies resolved through `node_modules` are also added to the page stylesheet by default
 - The rule is designed for projects still using `@import`
 - It ignores `@import url(...)` and conditional imports by default
 - It compares canonical absolute paths to avoid false negatives from alias or relative path variations
 
 ## Enabling `node_modules` resolution
 
-By default, the rule does not resolve stylesheet imports through `node_modules`.
+By default, the rule resolves stylesheet imports through `node_modules`.
 
-If you want those imports to participate in duplicate detection, enable `includeNodeModules: true`.
-
-When `includeNodeModules: true`:
+With the default configuration:
 
 - `mode: "simple"` analyzes only direct `node_modules` imports by default
 - `nodeModulesDepth` increases how far the rule can recurse inside `node_modules` while staying in `simple`
 - `mode: "advanced"` enables full recursive analysis inside `node_modules`
 
-If you also want redundancies from `node_modules` descendants to be surfaced in the page stylesheet, enable `reportNodeModulesInPage: true`.
+If you want to disable this behavior, set `includeNodeModules: false`.
+
+If you want to stop surfacing redundancies from `node_modules` descendants in the page stylesheet, set `reportNodeModulesInPage: false`.
 
 ### ESLint 8
 
@@ -230,7 +230,6 @@ module.exports = {
         'no-redundant-imports-per-page/no-redundant-imports-per-page': [
           'error',
           {
-            includeNodeModules: true,
             mode: 'simple',
             nodeModulesDepth: 0,
           },
@@ -257,7 +256,6 @@ module.exports = [
       'no-redundant-imports-per-page/no-redundant-imports-per-page': [
         'error',
         {
-          includeNodeModules: true,
           mode: 'simple',
           nodeModulesDepth: 0,
         },
@@ -283,9 +281,7 @@ module.exports = [
       'no-redundant-imports-per-page/no-redundant-imports-per-page': [
         'error',
         {
-          includeNodeModules: true,
           mode: 'advanced',
-          reportNodeModulesInPage: true,
         },
       ],
     },

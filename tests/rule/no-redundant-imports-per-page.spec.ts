@@ -136,10 +136,14 @@ describe('no-redundant-imports-per-page rule', () => {
     );
   });
 
-  it('ignores duplicates that only resolve through node_modules by default', async () => {
+  it('reports duplicates that resolve through node_modules by default', async () => {
     const messages = await lintFile('app/pages/nodeModules/styles.scss');
 
-    expect(messages).toHaveLength(0);
+    expect(messages).toHaveLength(1);
+    expect(messages[0]?.line).toBe(2);
+    expect(messages[0]?.message).toBe(
+      `Duplicated import "~@andes/button/index" in "${getFixturePath('app/pages/nodeModules/styles.scss')}". First seen at "${getFixturePath('app/components/ButtonWrapper/styles.scss')}:1" for page "${getFixturePath('app/pages/nodeModules/styles.scss')}".`,
+    );
   });
 
   it('reports duplicates that come from node_modules imports when enabled explicitly', async () => {
@@ -168,10 +172,10 @@ describe('no-redundant-imports-per-page rule', () => {
     );
   });
 
-  it('defaults to simple mode for node_modules analysis when enabled', async () => {
+  it('defaults to simple mode for node_modules analysis', async () => {
     const messages = await lintFileWithFlatRuleOptions(
       ['app/components/OneLevelSharedConsumer/styles.scss'],
-      { includeNodeModules: true },
+      {},
     );
 
     expect(messages).toHaveLength(0);
@@ -221,13 +225,14 @@ describe('no-redundant-imports-per-page rule', () => {
     );
   });
 
-  it('does not report node_modules duplicates from the page entry unless explicitly enabled', async () => {
-    const messages = await lintFileWithFlatRuleOptions(
-      ['app/pages/nodeModulesBranches/styles.scss'],
-      { includeNodeModules: true },
-    );
+  it('reports node_modules duplicates from the page entry by default', async () => {
+    const messages = await lintFile('app/pages/nodeModulesBranches/styles.scss');
 
-    expect(messages).toHaveLength(0);
+    expect(messages).toHaveLength(1);
+    expect(messages[0]?.line).toBe(2);
+    expect(messages[0]?.message).toBe(
+      `Duplicated import "~@andes/button/index" in "${getFixturePath('app/components/ButtonWrapperDuplicate/styles.scss')}". First seen at "${getFixturePath('app/components/ButtonWrapper/styles.scss')}:1" for page "${getFixturePath('app/pages/nodeModulesBranches/styles.scss')}".`,
+    );
   });
 
   it('reports node_modules duplicates from the page entry when page aggregation is explicitly enabled', async () => {
@@ -243,12 +248,12 @@ describe('no-redundant-imports-per-page rule', () => {
     );
   });
 
-  it('does not report node_modules duplicates from descendant components by default', async () => {
+  it('reports node_modules duplicates from descendant components by default', async () => {
     const pageMessages = await lintFile('app/pages/nodeModulesBranches/styles.scss');
     const componentMessages = await lintFile('app/components/ButtonWrapperDuplicate/styles.scss');
 
-    expect(pageMessages).toHaveLength(0);
-    expect(componentMessages).toHaveLength(0);
+    expect(pageMessages).toHaveLength(1);
+    expect(componentMessages).toHaveLength(1);
   });
 
   it('reads aliases from package.json _moduleAliases', async () => {
