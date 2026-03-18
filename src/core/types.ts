@@ -23,7 +23,6 @@ export interface ImportOccurrence {
   importText: string;
   resolvedFile: string;
   loc: SourceLocation;
-  chain: string[];
 }
 
 export interface Diagnostic {

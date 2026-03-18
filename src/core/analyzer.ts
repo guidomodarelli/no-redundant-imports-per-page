@@ -93,7 +93,7 @@ const analyzeEntryPoint = (
   const firstSeen = new Map<string, ImportOccurrence>();
   const activeStack = new Set<string>();
 
-  const walk = (currentFile: string, chain: string[]): void => {
+  const walk = (currentFile: string): void => {
     const styleFileInfo = getStyleFileInfo(currentFile, analysisState);
     activeStack.add(currentFile);
 
@@ -127,7 +127,6 @@ const analyzeEntryPoint = (
         importText: importEdge.importText,
         resolvedFile,
         loc: importEdge.loc,
-        chain: [...chain, currentFile],
       };
 
       const firstOccurrence = firstSeen.get(resolvedFile);
@@ -146,7 +145,7 @@ const analyzeEntryPoint = (
       }
 
       firstSeen.set(resolvedFile, currentOccurrence);
-      walk(resolvedFile, [...chain, currentFile]);
+      walk(resolvedFile);
     }
 
     activeStack.delete(currentFile);
@@ -162,10 +161,9 @@ const analyzeEntryPoint = (
       line: 1,
       column: 1,
     },
-    chain: [],
   });
 
-  walk(canonicalEntryFile, []);
+  walk(canonicalEntryFile);
 };
 
 const createEmptyAnalysisState = (): AnalysisState => ({

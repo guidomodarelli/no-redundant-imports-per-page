@@ -1,0 +1,19 @@
+Sí, hay margen para mejorar rendimiento. El plugin ya tiene una optimización importante, que es cachear el análisis completo por `cwd + options` en [cache.ts](/Users/gmodarelli/ghq/projects/no-redundant-imports-per-page/src/core/cache.ts#L5), pero todavía hay varios costos evitables.
+
+Lo más importante hoy es esto: cada vez que la regla necesita diagnósticos para un archivo, dispara `analyzeWorkspace(...)` y ese análisis recorre todos los entry points descubiertos del repo, no solo el árbol relevante para ese archivo, en [analyzer.ts](/Users/gmodarelli/ghq/projects/no-redundant-imports-per-page/src/core/analyzer.ts#L178). En CLI eso se amortiza bastante por el cache, pero en editor o ejecuciones parciales puede sentirse pesado. La mejora con más impacto sería una de estas dos:
+- análisis incremental por archivo objetivo, resolviendo solo los entry points que pueden alcanzarlo;
+- o precalcular un índice inverso `stylesheet -> entry points` y analizar solo esos subárboles.
+
+Después, hay mejoras más puntuales y bastante concretas:
+
+- El parser usa `postcss-scss.parse(...)` para todo el archivo aunque solo consume `@import` top-level, en [parser.ts](/Users/gmodarelli/ghq/projects/no-redundant-imports-per-page/src/core/parser.ts#L155). Si querés máximo rendimiento, podrías reemplazarlo por un scanner más liviano orientado solo a `@import`, con el costo de tener más complejidad y más riesgo de edge cases.
+- La resolución de archivos prueba muchos candidatos con `existsSync` + `statSync` para cada import, en [resolver.ts](/Users/gmodarelli/ghq/projects/no-redundant-imports-per-page/src/core/resolver.ts#L75). Funciona bien, pero en repos grandes puede pegar. Ahí se puede mejorar cacheando también los “candidate resolutions” negativos y positivos por `targetPath`.
+- En `resolveStyleImport(...)` se vuelve a canonicalizar el `importerFile` al construir la key del cache en [resolver.ts](/Users/gmodarelli/ghq/projects/no-redundant-imports-per-page/src/core/resolver.ts#L117). Como en casi todo el flujo ya trabajás con paths canonicalizados, podrías evitar esa operación repetida.
+- El discovery usa `fast-glob` más varios `existsSync` para encontrar el sibling `index|view`, en [discovery.ts](/Users/gmodarelli/ghq/projects/no-redundant-imports-per-page/src/core/discovery.ts#L54). No parece el cuello principal, pero podría cachearse por directorio si el workspace es muy grande.
+- El processor convierte todo el SCSS a pseudo-JS comentando línea por línea, en [stylesheet.ts](/Users/gmodarelli/ghq/projects/no-redundant-imports-per-page/src/processor/stylesheet.ts#L1). No parece el mayor costo, pero sí mete trabajo y memoria extra por archivo. Se puede simplificar si solo necesitás conservar líneas para que ESLint ejecute la regla.
+
+Si tuviera que priorizar por retorno real, haría esto:
+1. evitar reanalizar workspace completo cuando solo cambia un archivo;
+2. optimizar la resolución de imports;
+3. evitar canonicalizaciones repetidas en el cache de resolución;
+4. recién después evaluar reemplazar PostCSS por un parser más chico.
