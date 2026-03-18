@@ -63,6 +63,33 @@ npm link no-redundant-imports-per-page
 
 This is useful when you want to iterate quickly across multiple local changes, but `file:` is usually more predictable.
 
+### Which package name should you use?
+
+There are two valid ways to reference this local package, depending on how the consumer project loads ESLint plugins:
+
+- `no-redundant-imports-per-page`
+- `eslint-plugin-no-redundant-imports-per-page`
+
+Use `no-redundant-imports-per-page` when the consumer project imports the package directly in JavaScript, for example in ESLint flat config or in custom scripts:
+
+```js
+const plugin = require('no-redundant-imports-per-page');
+```
+
+Use `eslint-plugin-no-redundant-imports-per-page` when the consumer project uses legacy `.eslintrc*` config and references the plugin by name in `plugins` or `extends`. ESLint 8 resolves those entries using the `eslint-plugin-*` naming convention:
+
+```json
+{
+  "plugins": ["no-redundant-imports-per-page"]
+}
+```
+
+In practice:
+
+- Flat config: install `no-redundant-imports-per-page`
+- Legacy `.eslintrc*`: install `eslint-plugin-no-redundant-imports-per-page`
+- Mixed setups that use both styles may install both names pointing to the same local folder
+
 ## ESLint 8 usage
 
 ```js
