@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 
 import { clearAnalysisCache, getCacheKey, getCachedAnalysis, setCachedAnalysis } from './cache';
@@ -22,6 +23,30 @@ export const DEFAULT_RULE_OPTIONS: Omit<NormalizedRuleOptions, 'aliases'> = {
   analyzeConditionalImports: false,
 };
 
+const loadPackageModuleAliases = (cwd: string): Record<string, string> => {
+  const packageJsonPath = path.join(cwd, 'package.json');
+
+  if (!fs.existsSync(packageJsonPath)) {
+    return {};
+  }
+
+  try {
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as {
+      _moduleAliases?: Record<string, unknown>;
+    };
+
+    return Object.fromEntries(
+      Object.entries(packageJson._moduleAliases ?? {}).flatMap(([alias, aliasTarget]) =>
+        typeof aliasTarget === 'string'
+          ? [[alias, path.resolve(cwd, aliasTarget)]]
+          : [],
+      ),
+    );
+  } catch {
+    return {};
+  }
+};
+
 export const normalizeRuleOptions = (
   cwd: string,
   ruleOptions: RuleOptions | undefined,
@@ -32,6 +57,7 @@ export const normalizeRuleOptions = (
   pageModuleNames: ruleOptions?.pageModuleNames ?? DEFAULT_RULE_OPTIONS.pageModuleNames,
   aliases: {
     '@root': path.resolve(cwd),
+    ...loadPackageModuleAliases(cwd),
     ...(ruleOptions?.aliases ?? {}),
   },
   includeNodeModules: ruleOptions?.includeNodeModules ?? DEFAULT_RULE_OPTIONS.includeNodeModules,

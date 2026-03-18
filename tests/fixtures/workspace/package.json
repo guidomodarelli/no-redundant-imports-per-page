@@ -1,0 +1,6 @@
+{
+  "_moduleAliases": {
+    "@app": "app",
+    "@root": "."
+  }
+}

@@ -99,6 +99,16 @@ describe('no-redundant-imports-per-page rule', () => {
     );
   });
 
+  it('reads aliases from package.json _moduleAliases', async () => {
+    const messages = await lintFile('app/pages/packageAliases/styles.scss');
+
+    expect(messages).toHaveLength(1);
+    expect(messages[0]?.line).toBe(2);
+    expect(messages[0]?.message).toBe(
+      `Redundant style import "@app/styles/common": resolves to "${getFixturePath('app/styles/_common.scss')}" and was already included for page entry "${getFixturePath('app/pages/packageAliases/styles.scss')}". First included from "${getFixturePath('app/pages/packageAliases/styles.scss')}:1".`,
+    );
+  });
+
   it('resolves Sass partials and omitted extensions without false positives', async () => {
     const messages = await lintFile('app/pages/partials/styles.scss');
 

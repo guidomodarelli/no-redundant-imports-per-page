@@ -111,6 +111,8 @@ module.exports = [
 
 ## Notes
 
+- The rule always resolves `@root` to the current ESLint `cwd`
+- It also reads `package.json#_moduleAliases` automatically, then applies any explicit `aliases` passed in the rule config as the final override
 - The rule is designed for projects still using `@import`
 - It ignores `@import url(...)` and conditional imports by default
 - It compares canonical absolute paths to avoid false negatives from alias or relative path variations
