@@ -40,6 +40,7 @@ export interface AnalysisState {
   diagnosticsByFile: Map<string, Diagnostic[]>;
   parseCache: Map<string, StyleFileInfo>;
   resolveCache: Map<string, string | null>;
+  targetPathResolveCache: Map<string, string | null>;
 }
 
 export interface NormalizedRuleOptions {

@@ -75,7 +75,14 @@ const buildCandidateFiles = (
 const resolveExistingFile = (
   targetPath: string,
   styleExtensions: string[],
+  analysisState: AnalysisState,
 ): string | null => {
+  const cachedResolution = analysisState.targetPathResolveCache.get(targetPath);
+
+  if (cachedResolution !== undefined) {
+    return cachedResolution;
+  }
+
   const seenCandidates = new Set<string>();
 
   for (const candidateFile of buildCandidateFiles(targetPath, styleExtensions)) {
@@ -95,9 +102,12 @@ const resolveExistingFile = (
       continue;
     }
 
-    return canonicalizeFilePath(resolvedCandidateFile);
+    const canonicalResolvedFile = canonicalizeFilePath(resolvedCandidateFile);
+    analysisState.targetPathResolveCache.set(targetPath, canonicalResolvedFile);
+    return canonicalResolvedFile;
   }
 
+  analysisState.targetPathResolveCache.set(targetPath, null);
   return null;
 };
 
@@ -137,7 +147,7 @@ export const resolveStyleImport = (
   }
 
   const resolvedFile = targetPath
-    ? resolveExistingFile(targetPath, options.styleExtensions)
+    ? resolveExistingFile(targetPath, options.styleExtensions, analysisState)
     : null;
 
   analysisState.resolveCache.set(cacheKey, resolvedFile);

@@ -171,6 +171,7 @@ const createEmptyAnalysisState = (): AnalysisState => ({
   diagnosticsByFile: new Map<string, Diagnostic[]>(),
   parseCache: new Map<string, StyleFileInfo>(),
   resolveCache: new Map<string, string | null>(),
+  targetPathResolveCache: new Map<string, string | null>(),
 });
 
 export const analyzeWorkspace = (
