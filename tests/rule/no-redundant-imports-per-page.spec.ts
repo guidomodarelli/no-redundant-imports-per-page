@@ -84,15 +84,15 @@ describe('no-redundant-imports-per-page rule', () => {
     expect(messages).toHaveLength(3);
     expect(messages[0]?.line).toBe(2);
     expect(messages[0]?.message).toBe(
-      `Page "${getFixturePath('app/pages/userCreate/styles.scss')}" reaches duplicate style import "~@root/app/styles/common" in "${getFixturePath('app/components/SearchDropdown/styles.scss')}". Already included from "${getFixturePath('app/pages/userCreate/styles.scss')}:1".`,
+      `Page duplicate: "${getFixturePath('app/pages/userCreate/styles.scss')}" reaches "~@root/app/styles/common" via "${getFixturePath('app/components/SearchDropdown/styles.scss')}". First seen at "${getFixturePath('app/pages/userCreate/styles.scss')}:1".`,
     );
     expect(messages[1]?.line).toBe(3);
     expect(messages[1]?.message).toBe(
-      `Duplicate style import "@root/app/components/SearchDropdown/styles" in "${getFixturePath('app/pages/userCreate/styles.scss')}". Already included from "${getFixturePath('app/pages/userCreate/styles.scss')}:2" for page "${getFixturePath('app/pages/userCreate/styles.scss')}".`,
+      `Duplicate import: "@root/app/components/SearchDropdown/styles" in "${getFixturePath('app/pages/userCreate/styles.scss')}". First seen at "${getFixturePath('app/pages/userCreate/styles.scss')}:2" for page "${getFixturePath('app/pages/userCreate/styles.scss')}".`,
     );
     expect(messages[2]?.line).toBe(5);
     expect(messages[2]?.message).toBe(
-      `Duplicate style import "~@root/app/components/UserRolesCard/styles" in "${getFixturePath('app/pages/userCreate/styles.scss')}". Already included from "${getFixturePath('app/pages/userCreate/styles.scss')}:4" for page "${getFixturePath('app/pages/userCreate/styles.scss')}".`,
+      `Duplicate import: "~@root/app/components/UserRolesCard/styles" in "${getFixturePath('app/pages/userCreate/styles.scss')}". First seen at "${getFixturePath('app/pages/userCreate/styles.scss')}:4" for page "${getFixturePath('app/pages/userCreate/styles.scss')}".`,
     );
   });
 
@@ -102,7 +102,7 @@ describe('no-redundant-imports-per-page rule', () => {
     expect(messages).toHaveLength(1);
     expect(messages[0]?.line).toBe(1);
     expect(messages[0]?.message).toBe(
-      `Duplicate style import "../Shared/styles" in "${getFixturePath('app/components/BranchB/styles.scss')}". Already included from "${getFixturePath('app/components/BranchA/styles.scss')}:1" for page "${getFixturePath('app/pages/transitive/styles.scss')}".`,
+      `Duplicate import: "../Shared/styles" in "${getFixturePath('app/components/BranchB/styles.scss')}". First seen at "${getFixturePath('app/components/BranchA/styles.scss')}:1" for page "${getFixturePath('app/pages/transitive/styles.scss')}".`,
     );
   });
 
@@ -112,7 +112,7 @@ describe('no-redundant-imports-per-page rule', () => {
     expect(messages).toHaveLength(1);
     expect(messages[0]?.line).toBe(2);
     expect(messages[0]?.message).toBe(
-      `Page "${getFixturePath('app/pages/transitive/styles.scss')}" reaches duplicate style import "../Shared/styles" in "${getFixturePath('app/components/BranchB/styles.scss')}". Already included from "${getFixturePath('app/components/BranchA/styles.scss')}:1".`,
+      `Page duplicate: "${getFixturePath('app/pages/transitive/styles.scss')}" reaches "../Shared/styles" via "${getFixturePath('app/components/BranchB/styles.scss')}". First seen at "${getFixturePath('app/components/BranchA/styles.scss')}:1".`,
     );
   });
 
@@ -122,7 +122,7 @@ describe('no-redundant-imports-per-page rule', () => {
     expect(messages).toHaveLength(1);
     expect(messages[0]?.line).toBe(1);
     expect(messages[0]?.message).toBe(
-      `Duplicate style import "@root/app/components/SearchDropdown/styles" in "${getFixturePath('app/pages/multiImport/styles.scss')}". Already included from "${getFixturePath('app/pages/multiImport/styles.scss')}:1" for page "${getFixturePath('app/pages/multiImport/styles.scss')}".`,
+      `Duplicate import: "@root/app/components/SearchDropdown/styles" in "${getFixturePath('app/pages/multiImport/styles.scss')}". First seen at "${getFixturePath('app/pages/multiImport/styles.scss')}:1" for page "${getFixturePath('app/pages/multiImport/styles.scss')}".`,
     );
   });
 
@@ -132,7 +132,7 @@ describe('no-redundant-imports-per-page rule', () => {
     expect(messages).toHaveLength(1);
     expect(messages[0]?.line).toBe(1);
     expect(messages[0]?.message).toBe(
-      `Duplicate style import "~@root/app/components/CycleA/styles" in "${getFixturePath('app/components/CycleB/styles.scss')}". Already included from "${getFixturePath('app/pages/cycle/styles.scss')}:1" for page "${getFixturePath('app/pages/cycle/styles.scss')}". Cycle detected in the dependency chain.`,
+      `Duplicate import: "~@root/app/components/CycleA/styles" in "${getFixturePath('app/components/CycleB/styles.scss')}". First seen at "${getFixturePath('app/pages/cycle/styles.scss')}:1" for page "${getFixturePath('app/pages/cycle/styles.scss')}". Cycle detected in the dependency chain.`,
     );
   });
 
@@ -151,7 +151,7 @@ describe('no-redundant-imports-per-page rule', () => {
     expect(messages).toHaveLength(1);
     expect(messages[0]?.line).toBe(2);
     expect(messages[0]?.message).toBe(
-      `Duplicate style import "~@andes/button/index" in "${getFixturePath('app/pages/nodeModules/styles.scss')}". Already included from "${getFixturePath('app/components/ButtonWrapper/styles.scss')}:1" for page "${getFixturePath('app/pages/nodeModules/styles.scss')}".`,
+      `Duplicate import: "~@andes/button/index" in "${getFixturePath('app/pages/nodeModules/styles.scss')}". First seen at "${getFixturePath('app/components/ButtonWrapper/styles.scss')}:1" for page "${getFixturePath('app/pages/nodeModules/styles.scss')}".`,
     );
   });
 
@@ -164,7 +164,7 @@ describe('no-redundant-imports-per-page rule', () => {
     expect(messages).toHaveLength(1);
     expect(messages[0]?.line).toBe(1);
     expect(messages[0]?.message).toBe(
-      `Duplicate style import "~@andes/button/index" in "${getFixturePath('app/components/ButtonWrapperDuplicate/styles.scss')}". Already included from "${getFixturePath('app/components/ButtonWrapper/styles.scss')}:1" for page "${getFixturePath('app/pages/nodeModulesBranches/styles.scss')}".`,
+      `Duplicate import: "~@andes/button/index" in "${getFixturePath('app/components/ButtonWrapperDuplicate/styles.scss')}". First seen at "${getFixturePath('app/components/ButtonWrapper/styles.scss')}:1" for page "${getFixturePath('app/pages/nodeModulesBranches/styles.scss')}".`,
     );
   });
 
@@ -195,7 +195,7 @@ describe('no-redundant-imports-per-page rule', () => {
     expect(messages).toHaveLength(1);
     expect(messages[0]?.line).toBe(1);
     expect(messages[0]?.message).toBe(
-      `Duplicate style import "~@test/one-level/shared" in "${getFixturePath('app/components/OneLevelSharedConsumer/styles.scss')}". Already included from "${getFixturePath('node_modules/@test/one-level/index.scss')}:1" for page "${getFixturePath('app/pages/nodeModulesOneLevel/styles.scss')}".`,
+      `Duplicate import: "~@test/one-level/shared" in "${getFixturePath('app/components/OneLevelSharedConsumer/styles.scss')}". First seen at "${getFixturePath('node_modules/@test/one-level/index.scss')}:1" for page "${getFixturePath('app/pages/nodeModulesOneLevel/styles.scss')}".`,
     );
   });
 
@@ -217,7 +217,7 @@ describe('no-redundant-imports-per-page rule', () => {
     expect(messages).toHaveLength(1);
     expect(messages[0]?.line).toBe(1);
     expect(messages[0]?.message).toBe(
-      `Duplicate style import "~@test/deep-chain/shared" in "${getFixturePath('app/components/DeepChainSharedConsumer/styles.scss')}". Already included from "${getFixturePath('node_modules/@test/deep-chain/layer.scss')}:1" for page "${getFixturePath('app/pages/nodeModulesDeepChain/styles.scss')}".`,
+      `Duplicate import: "~@test/deep-chain/shared" in "${getFixturePath('app/components/DeepChainSharedConsumer/styles.scss')}". First seen at "${getFixturePath('node_modules/@test/deep-chain/layer.scss')}:1" for page "${getFixturePath('app/pages/nodeModulesDeepChain/styles.scss')}".`,
     );
   });
 
@@ -239,7 +239,7 @@ describe('no-redundant-imports-per-page rule', () => {
     expect(messages).toHaveLength(1);
     expect(messages[0]?.line).toBe(2);
     expect(messages[0]?.message).toBe(
-      `Page "${getFixturePath('app/pages/nodeModulesBranches/styles.scss')}" reaches duplicate style import "~@andes/button/index" in "${getFixturePath('app/components/ButtonWrapperDuplicate/styles.scss')}". Already included from "${getFixturePath('app/components/ButtonWrapper/styles.scss')}:1".`,
+      `Page duplicate: "${getFixturePath('app/pages/nodeModulesBranches/styles.scss')}" reaches "~@andes/button/index" via "${getFixturePath('app/components/ButtonWrapperDuplicate/styles.scss')}". First seen at "${getFixturePath('app/components/ButtonWrapper/styles.scss')}:1".`,
     );
   });
 
@@ -257,7 +257,7 @@ describe('no-redundant-imports-per-page rule', () => {
     expect(messages).toHaveLength(1);
     expect(messages[0]?.line).toBe(2);
     expect(messages[0]?.message).toBe(
-      `Duplicate style import "@app/styles/common" in "${getFixturePath('app/pages/packageAliases/styles.scss')}". Already included from "${getFixturePath('app/pages/packageAliases/styles.scss')}:1" for page "${getFixturePath('app/pages/packageAliases/styles.scss')}".`,
+      `Duplicate import: "@app/styles/common" in "${getFixturePath('app/pages/packageAliases/styles.scss')}". First seen at "${getFixturePath('app/pages/packageAliases/styles.scss')}:1" for page "${getFixturePath('app/pages/packageAliases/styles.scss')}".`,
     );
   });
 
