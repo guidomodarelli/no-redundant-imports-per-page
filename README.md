@@ -13,6 +13,8 @@ For every page stylesheet entry point discovered under `pages` or `nordic-pages`
 
 ## Examples
 
+See [docs/analysis-flow.md](docs/analysis-flow.md) for a visual walkthrough of the DFS traversal, `firstSeen`, and cycle detection.
+
 #### 1. Direct duplicate inside a page entry point
 
 ```scss
