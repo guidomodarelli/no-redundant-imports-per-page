@@ -84,7 +84,7 @@ describe('no-redundant-imports-per-page rule', () => {
     expect(messages).toHaveLength(3);
     expect(messages[0]?.line).toBe(2);
     expect(messages[0]?.message).toBe(
-      `Duplicated import "~@root/app/styles/common" in "${getFixturePath('app/components/SearchDropdown/styles.scss')}" for page "${getFixturePath('app/pages/userCreate/styles.scss')}". First seen at "${getFixturePath('app/pages/userCreate/styles.scss')}:1".`,
+      `Duplicated import "~@root/app/styles/common" in "${getFixturePath('app/components/SearchDropdown/styles.scss')}". First seen at "${getFixturePath('app/pages/userCreate/styles.scss')}:1" for page "${getFixturePath('app/pages/userCreate/styles.scss')}".`,
     );
     expect(messages[1]?.line).toBe(3);
     expect(messages[1]?.message).toBe(
@@ -112,7 +112,7 @@ describe('no-redundant-imports-per-page rule', () => {
     expect(messages).toHaveLength(1);
     expect(messages[0]?.line).toBe(2);
     expect(messages[0]?.message).toBe(
-      `Duplicated import "../Shared/styles" in "${getFixturePath('app/components/BranchB/styles.scss')}" for page "${getFixturePath('app/pages/transitive/styles.scss')}". First seen at "${getFixturePath('app/components/BranchA/styles.scss')}:1".`,
+      `Duplicated import "../Shared/styles" in "${getFixturePath('app/components/BranchB/styles.scss')}". First seen at "${getFixturePath('app/components/BranchA/styles.scss')}:1" for page "${getFixturePath('app/pages/transitive/styles.scss')}".`,
     );
   });
 
@@ -239,7 +239,7 @@ describe('no-redundant-imports-per-page rule', () => {
     expect(messages).toHaveLength(1);
     expect(messages[0]?.line).toBe(2);
     expect(messages[0]?.message).toBe(
-      `Duplicated import "~@andes/button/index" in "${getFixturePath('app/components/ButtonWrapperDuplicate/styles.scss')}" for page "${getFixturePath('app/pages/nodeModulesBranches/styles.scss')}". First seen at "${getFixturePath('app/components/ButtonWrapper/styles.scss')}:1".`,
+      `Duplicated import "~@andes/button/index" in "${getFixturePath('app/components/ButtonWrapperDuplicate/styles.scss')}". First seen at "${getFixturePath('app/components/ButtonWrapper/styles.scss')}:1" for page "${getFixturePath('app/pages/nodeModulesBranches/styles.scss')}".`,
     );
   });
 

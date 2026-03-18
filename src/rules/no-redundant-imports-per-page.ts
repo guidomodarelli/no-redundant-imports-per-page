@@ -71,7 +71,7 @@ const rule: Rule.RuleModule = {
       redundantImport:
         'Duplicated import "{{importText}}" in "{{redundantImporter}}". First seen at "{{firstImporter}}:{{firstLine}}" for page "{{entryFile}}".{{cycleSuffix}}',
       redundantImportViaPage:
-        'Duplicated import "{{importText}}" in "{{redundantImporter}}" for page "{{entryFile}}". First seen at "{{firstImporter}}:{{firstLine}}".{{cycleSuffix}}',
+        'Duplicated import "{{importText}}" in "{{redundantImporter}}". First seen at "{{firstImporter}}:{{firstLine}}" for page "{{entryFile}}".{{cycleSuffix}}',
     },
   },
   create(context) {
