@@ -84,12 +84,76 @@ const pushDiagnostic = (analysisState: AnalysisState, diagnostic: Diagnostic): v
   analysisState.diagnosticsByFile.set(diagnostic.file, existingDiagnostics);
 };
 
+const indexStylesheetEntryPoint = (
+  stylesheetFile: string,
+  entryFile: string,
+  analysisState: AnalysisState,
+): void => {
+  const indexedEntries = analysisState.entryFilesByStylesheet.get(stylesheetFile) ?? new Set<string>();
+  indexedEntries.add(entryFile);
+  analysisState.entryFilesByStylesheet.set(stylesheetFile, indexedEntries);
+};
+
+const indexEntryPointReachability = (
+  entryFile: string,
+  cwd: string,
+  options: NormalizedRuleOptions,
+  analysisState: AnalysisState,
+): void => {
+  const visited = new Set<string>();
+
+  const walk = (currentFile: string): void => {
+    if (visited.has(currentFile)) {
+      return;
+    }
+
+    visited.add(currentFile);
+    indexStylesheetEntryPoint(currentFile, entryFile, analysisState);
+
+    const styleFileInfo = getStyleFileInfo(currentFile, analysisState);
+
+    for (const importEdge of styleFileInfo.imports) {
+      if (importEdge.isUrlLike) {
+        continue;
+      }
+
+      if (importEdge.conditional && !options.analyzeConditionalImports) {
+        continue;
+      }
+
+      if (!importEdge.specifier) {
+        continue;
+      }
+
+      const resolvedFile = resolveStyleImport(
+        currentFile,
+        importEdge.specifier,
+        cwd,
+        options,
+        analysisState,
+      );
+
+      if (!resolvedFile) {
+        continue;
+      }
+
+      walk(resolvedFile);
+    }
+  };
+
+  walk(entryFile);
+};
+
 const analyzeEntryPoint = (
   entryFile: string,
   cwd: string,
   options: NormalizedRuleOptions,
   analysisState: AnalysisState,
 ): void => {
+  if (analysisState.analyzedEntries.has(entryFile)) {
+    return;
+  }
+
   const firstSeen = new Map<string, ImportOccurrence>();
   const activeStack = new Set<string>();
 
@@ -151,23 +215,24 @@ const analyzeEntryPoint = (
     activeStack.delete(currentFile);
   };
 
-  const canonicalEntryFile = canonicalizeFilePath(entryFile);
-
-  firstSeen.set(canonicalEntryFile, {
-    importerFile: canonicalEntryFile,
+  firstSeen.set(entryFile, {
+    importerFile: entryFile,
     importText: '<entry>',
-    resolvedFile: canonicalEntryFile,
+    resolvedFile: entryFile,
     loc: {
       line: 1,
       column: 1,
     },
   });
 
-  walk(canonicalEntryFile);
+  walk(entryFile);
+  analysisState.analyzedEntries.add(entryFile);
 };
 
 const createEmptyAnalysisState = (): AnalysisState => ({
   entryFiles: [],
+  entryFilesByStylesheet: new Map<string, Set<string>>(),
+  analyzedEntries: new Set<string>(),
   diagnosticsByFile: new Map<string, Diagnostic[]>(),
   parseCache: new Map<string, StyleFileInfo>(),
   resolveCache: new Map<string, string | null>(),
@@ -193,7 +258,7 @@ export const analyzeWorkspace = (
   analysisState.entryFiles = entryFiles;
 
   for (const entryFile of entryFiles) {
-    analyzeEntryPoint(entryFile, cwd, normalizedOptions, analysisState);
+    indexEntryPointReachability(entryFile, cwd, normalizedOptions, analysisState);
   }
 
   setCachedAnalysis(cacheKey, analysisState);
@@ -207,6 +272,17 @@ export const getDiagnosticsForFile = (
 ): Diagnostic[] => {
   const analysisState = analyzeWorkspace(cwd, ruleOptions);
   const canonicalFilePath = canonicalizeFilePath(filePath);
+  const relatedEntryFiles = analysisState.entryFilesByStylesheet.get(canonicalFilePath);
+
+  if (!relatedEntryFiles) {
+    return [];
+  }
+
+  const normalizedOptions = normalizeRuleOptions(cwd, ruleOptions);
+
+  for (const entryFile of relatedEntryFiles) {
+    analyzeEntryPoint(entryFile, cwd, normalizedOptions, analysisState);
+  }
 
   return analysisState.diagnosticsByFile.get(canonicalFilePath) ?? [];
 };

@@ -37,6 +37,8 @@ export interface Diagnostic {
 
 export interface AnalysisState {
   entryFiles: string[];
+  entryFilesByStylesheet: Map<string, Set<string>>;
+  analyzedEntries: Set<string>;
   diagnosticsByFile: Map<string, Diagnostic[]>;
   parseCache: Map<string, StyleFileInfo>;
   resolveCache: Map<string, string | null>;
