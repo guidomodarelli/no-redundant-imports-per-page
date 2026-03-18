@@ -9,7 +9,6 @@ Después, hay mejoras más puntuales y bastante concretas:
 - El parser usa `postcss-scss.parse(...)` para todo el archivo aunque solo consume `@import` top-level, en [parser.ts](/Users/gmodarelli/ghq/projects/no-redundant-imports-per-page/src/core/parser.ts#L155). Si querés máximo rendimiento, podrías reemplazarlo por un scanner más liviano orientado solo a `@import`, con el costo de tener más complejidad y más riesgo de edge cases.
 - La resolución de archivos prueba muchos candidatos con `existsSync` + `statSync` para cada import, en [resolver.ts](/Users/gmodarelli/ghq/projects/no-redundant-imports-per-page/src/core/resolver.ts#L75). Funciona bien, pero en repos grandes puede pegar. Ahí se puede mejorar cacheando también los “candidate resolutions” negativos y positivos por `targetPath`.
 - En `resolveStyleImport(...)` se vuelve a canonicalizar el `importerFile` al construir la key del cache en [resolver.ts](/Users/gmodarelli/ghq/projects/no-redundant-imports-per-page/src/core/resolver.ts#L117). Como en casi todo el flujo ya trabajás con paths canonicalizados, podrías evitar esa operación repetida.
-- El discovery usa `fast-glob` más varios `existsSync` para encontrar el sibling `index|view`, en [discovery.ts](/Users/gmodarelli/ghq/projects/no-redundant-imports-per-page/src/core/discovery.ts#L54). No parece el cuello principal, pero podría cachearse por directorio si el workspace es muy grande.
 
 Si tuviera que priorizar por retorno real, haría esto:
 1. evitar reanalizar workspace completo cuando solo cambia un archivo;

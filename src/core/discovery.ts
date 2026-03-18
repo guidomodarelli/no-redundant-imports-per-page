@@ -55,6 +55,7 @@ export const discoverPageEntryStyles = (
   cwd: string,
   options: NormalizedRuleOptions,
 ): string[] => {
+  const pageModuleSiblingCache = new Map<string, boolean>();
   const candidateFiles = fg.sync(
     options.pageDirNames.map((pageDirName) =>
       buildPattern(pageDirName, options.pageStyleNames, options.styleExtensions),
@@ -80,7 +81,12 @@ export const discoverPageEntryStyles = (
 
     const directoryPath = path.dirname(resolvedCandidateFile);
 
-    if (!hasPageModuleSibling(directoryPath, options)) {
+    const hasSiblingModule = pageModuleSiblingCache.get(directoryPath)
+      ?? hasPageModuleSibling(directoryPath, options);
+
+    pageModuleSiblingCache.set(directoryPath, hasSiblingModule);
+
+    if (!hasSiblingModule) {
       continue;
     }
 
