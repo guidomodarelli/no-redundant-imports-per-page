@@ -63,13 +63,22 @@ npm link no-redundant-imports-per-page
 
 This is useful when you want to iterate quickly across multiple local changes, but `file:` is usually more predictable.
 
-## Flat config usage
+## ESLint 8 usage
+
+```js
+module.exports = {
+  plugins: ['no-redundant-imports-per-page'],
+  extends: ['plugin:no-redundant-imports-per-page/recommended'],
+};
+```
+
+## ESLint 9 flat config usage
 
 ```js
 const plugin = require('no-redundant-imports-per-page');
 
 module.exports = [
-  ...plugin.configs.recommended,
+  ...plugin.configs['flat/recommended'],
 ];
 ```
 

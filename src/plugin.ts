@@ -14,9 +14,30 @@ const plugin = {
   configs: {} as Record<string, unknown>,
 };
 
-plugin.configs.recommended = [
+plugin.configs.recommended = {
+  plugins: ['no-redundant-imports-per-page'],
+  parserOptions: {
+    ecmaVersion: 2020,
+    sourceType: 'module',
+  },
+  overrides: [
+    {
+      files: ['**/*.{scss,sass,css}'],
+      processor: 'no-redundant-imports-per-page/stylesheet',
+      rules: {
+        'no-redundant-imports-per-page/no-redundant-imports-per-page': 'error',
+      },
+    },
+  ],
+};
+
+plugin.configs['flat/recommended'] = [
   {
     files: ['**/*.{scss,sass,css}'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      sourceType: 'module',
+    },
     plugins: {
       'no-redundant-imports-per-page': plugin,
     },

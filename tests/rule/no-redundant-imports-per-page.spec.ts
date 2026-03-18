@@ -1,6 +1,7 @@
 import path from 'node:path';
 
 import { ESLint } from 'eslint';
+import { LegacyESLint } from 'eslint/use-at-your-own-risk';
 
 import plugin, { clearAnalysisCache } from '../../src';
 
@@ -15,7 +16,26 @@ const lintFile = async (...segments: string[]) => {
   const eslint = new ESLint({
     cwd: workspaceRoot,
     overrideConfigFile: true,
+    overrideConfig: plugin.configs['flat/recommended'] as any,
+  });
+
+  const targetFile = path.join(...segments);
+  const results = await eslint.lintFiles([targetFile]);
+
+  return results[0]?.messages ?? [];
+};
+
+const lintFileWithLegacyConfig = async (...segments: string[]) => {
+  clearAnalysisCache();
+
+  const eslint = new LegacyESLint({
+    cwd: workspaceRoot,
+    overrideConfigFile: null as any,
     overrideConfig: plugin.configs.recommended as any,
+    plugins: {
+      'no-redundant-imports-per-page': plugin as any,
+    },
+    useEslintrc: false,
   });
 
   const targetFile = path.join(...segments);
@@ -93,6 +113,14 @@ describe('no-redundant-imports-per-page rule', () => {
 
   it('integrates with the stylesheet processor through ESLint flat config', async () => {
     const messages = await lintFile('app/pages/usersSilosLink/styles.scss');
+
+    expect(messages).toHaveLength(2);
+    expect(messages[0]?.line).toBe(4);
+    expect(messages[1]?.line).toBe(5);
+  });
+
+  it('integrates with ESLint legacy config for ESLint 8 consumers', async () => {
+    const messages = await lintFileWithLegacyConfig('app/pages/usersSilosLink/styles.scss');
 
     expect(messages).toHaveLength(2);
     expect(messages[0]?.line).toBe(4);
