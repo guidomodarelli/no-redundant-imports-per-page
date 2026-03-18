@@ -69,9 +69,9 @@ const rule: Rule.RuleModule = {
     ],
     messages: {
       redundantImport:
-        'Duplicate import: "{{importText}}" in "{{redundantImporter}}". First seen at "{{firstImporter}}:{{firstLine}}" for page "{{entryFile}}".{{cycleSuffix}}',
+        'Duplicated import "{{importText}}" in "{{redundantImporter}}". First seen at "{{firstImporter}}:{{firstLine}}" for page "{{entryFile}}".{{cycleSuffix}}',
       redundantImportViaPage:
-        'Page duplicate: "{{entryFile}}" reaches "{{importText}}" via "{{redundantImporter}}". First seen at "{{firstImporter}}:{{firstLine}}".{{cycleSuffix}}',
+        'Duplicated import "{{importText}}" in "{{redundantImporter}}" for page "{{entryFile}}". First seen at "{{firstImporter}}:{{firstLine}}".{{cycleSuffix}}',
     },
   },
   create(context) {
