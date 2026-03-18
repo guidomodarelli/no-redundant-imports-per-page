@@ -11,6 +11,79 @@ For every page stylesheet entry point discovered under `pages` or `nordic-pages`
 3. Canonicalizes every resolved file path
 4. Reports the import that reintroduces a previously visited stylesheet in the same page tree
 
+## Examples
+
+#### 1. Direct duplicate inside a page entry point
+
+```scss
+@import '~@root/app/components/SearchDropdown/styles';
+@import '~@root/app/components/SearchDropdown/styles';
+```
+
+#### 2. Transitive duplicate through different component branches
+
+```scss
+// page stylesheet
+@import '~@root/app/components/BranchA/styles';
+@import '~@root/app/components/BranchB/styles';
+```
+
+```scss
+// BranchA/styles.scss
+@import '../Shared/styles';
+```
+
+```scss
+// BranchB/styles.scss
+@import '../Shared/styles';
+```
+
+#### 3. Duplicate inside a reusable component
+
+```scss
+// Card/styles.scss
+@import '../Shared/styles';
+@import '../Shared/styles';
+```
+
+```scss
+// page A
+@import '~@root/app/components/Card/styles';
+```
+
+```scss
+// page B
+@import '~@root/app/components/Card/styles';
+```
+
+#### 4. Top-level imports with rules in between
+
+```scss
+@import './variables';
+
+.button {
+  color: red;
+}
+
+@import './card';
+```
+
+#### 5. Nested imports are ignored
+
+```scss
+.wrapper {
+  @import './card';
+}
+```
+
+```scss
+@mixin mobileStyles {
+  @import './card';
+}
+```
+
+Blank lines, comments, and spaces between top-level imports do not affect detection.
+
 ## Installation
 
 ```bash
