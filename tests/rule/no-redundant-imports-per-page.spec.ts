@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 
 import { ESLint } from 'eslint';
@@ -94,6 +95,22 @@ describe('no-redundant-imports-per-page rule', () => {
     expect(messages[2]?.message).toBe(
       `Duplicated import "~@root/app/components/UserRolesCard/styles" in "${getFixturePath('app/pages/userCreate/styles.scss')}". First seen at "${getFixturePath('app/pages/userCreate/styles.scss')}:4" for page "${getFixturePath('app/pages/userCreate/styles.scss')}".`,
     );
+  });
+
+  it('reports the full line range instead of only the @import statement', async () => {
+    const messages = await lintFile('app/pages/fullLineRange/styles.scss');
+    const duplicateLine = fs
+      .readFileSync(
+        path.join(workspaceRoot, 'app/pages/fullLineRange/styles.scss'),
+        'utf8',
+      )
+      .split(/\r?\n/)[1];
+
+    expect(messages).toHaveLength(1);
+    expect(messages[0]?.line).toBe(2);
+    expect(messages[0]?.endLine).toBe(2);
+    expect(messages[0]?.column).toBe(1);
+    expect(messages[0]?.endColumn).toBe(duplicateLine.length + 1);
   });
 
   it('reports transitive duplicates reached through different branches', async () => {

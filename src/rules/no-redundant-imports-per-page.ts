@@ -1,9 +1,37 @@
+import fs from 'node:fs';
 import path from 'node:path';
 
 import type { Rule } from 'eslint';
 
 import { getDiagnosticsForFile } from '../core/analyzer';
 import type { RuleOptions } from '../core/types';
+
+const getLineLengths = (filename: string): number[] =>
+  fs.readFileSync(filename, 'utf8').split(/\r?\n/).map((line) => line.length);
+
+const getFullLineRange = (
+  diagnostic: {
+    loc: {
+      line: number;
+      endLine?: number;
+    };
+  },
+  lineLengths: number[],
+) => {
+  const startLine = diagnostic.loc.line;
+  const endLine = diagnostic.loc.endLine ?? diagnostic.loc.line;
+
+  return {
+    start: {
+      line: startLine,
+      column: 0,
+    },
+    end: {
+      line: endLine,
+      column: lineLengths[endLine - 1] ?? 0,
+    },
+  };
+};
 
 const rule: Rule.RuleModule = {
   meta: {
@@ -89,6 +117,7 @@ const rule: Rule.RuleModule = {
     return {
       Program(node) {
         const diagnostics = getDiagnosticsForFile(cwd, filename, options);
+        const lineLengths = getLineLengths(filename);
 
         for (const diagnostic of diagnostics) {
           const messageId = diagnostic.kind === 'pageAggregate'
@@ -97,16 +126,7 @@ const rule: Rule.RuleModule = {
 
           context.report({
             node,
-            loc: {
-              start: {
-                line: diagnostic.loc.line,
-                column: Math.max(0, diagnostic.loc.column - 1),
-              },
-              end: {
-                line: diagnostic.loc.endLine ?? diagnostic.loc.line,
-                column: Math.max(0, (diagnostic.loc.endColumn ?? diagnostic.loc.column) - 1),
-              },
-            },
+            loc: getFullLineRange(diagnostic, lineLengths),
             messageId,
             data: {
               importText: diagnostic.importText,

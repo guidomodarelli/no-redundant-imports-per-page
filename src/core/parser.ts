@@ -147,9 +147,16 @@ const parseImportParams = (params: string): ParsedImportSpecifier[] =>
     return parseUnquotedImport(item);
   });
 
-const getNodeLocation = (line: number, column: number): SourceLocation => ({
-  line,
-  column,
+const getNodeLocation = (
+  startLine: number,
+  startColumn: number,
+  endLine?: number,
+  endColumn?: number,
+): SourceLocation => ({
+  line: startLine,
+  column: startColumn,
+  endLine,
+  endColumn,
 });
 
 export const parseStyleFile = (filePath: string): StyleFileInfo => {
@@ -165,7 +172,8 @@ export const parseStyleFile = (filePath: string): StyleFileInfo => {
       return;
     }
 
-    const sourceLocation = node.source?.start ?? { line: 1, column: 1 };
+    const startLocation = node.source?.start ?? { line: 1, column: 1 };
+    const endLocation = node.source?.end;
 
     for (const parsedImport of parseImportParams(node.params)) {
       imports.push({
@@ -173,7 +181,12 @@ export const parseStyleFile = (filePath: string): StyleFileInfo => {
         specifier: parsedImport.specifier,
         conditional: parsedImport.conditional,
         isUrlLike: parsedImport.isUrlLike,
-        loc: getNodeLocation(sourceLocation.line, sourceLocation.column),
+        loc: getNodeLocation(
+          startLocation.line,
+          startLocation.column,
+          endLocation?.line,
+          endLocation?.column,
+        ),
       });
     }
   });
