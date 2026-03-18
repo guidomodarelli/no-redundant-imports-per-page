@@ -1,0 +1,27 @@
+{
+  "name": "no-redundant-imports-per-page",
+  "version": "0.1.0",
+  "description": "ESLint plugin to detect redundant style imports per page entry point.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "jest --runInBand"
+  },
+  "dependencies": {
+    "eslint": "^9.23.0",
+    "fast-glob": "^3.3.3",
+    "postcss": "^8.5.3",
+    "postcss-scss": "^4.0.9"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.13.13",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.6",
+    "typescript": "^5.8.2"
+  }
+}
