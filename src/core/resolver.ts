@@ -114,7 +114,7 @@ export const resolveStyleImport = (
   options: NormalizedRuleOptions,
   analysisState: AnalysisState,
 ): string | null => {
-  const cacheKey = `${canonicalizeFilePath(importerFile)}::${importText}`;
+  const cacheKey = `${importerFile}::${importText}`;
   const cachedResolution = analysisState.resolveCache.get(cacheKey);
 
   if (cachedResolution !== undefined) {
