@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import type { Rule } from 'eslint';
 
 import { getDiagnosticsForFile } from '../core/analyzer';
@@ -64,6 +66,8 @@ const rule: Rule.RuleModule = {
       ?? context.getFilename();
     const cwd = (context as Rule.RuleContext & { cwd?: string }).cwd ?? process.cwd();
     const options = context.options[0] as RuleOptions | undefined;
+    const toProjectRelativePath = (filePath: string): string =>
+      path.relative(cwd, filePath).split(path.sep).join(path.posix.sep);
 
     if (filename === '<input>') {
       return {};
@@ -89,9 +93,9 @@ const rule: Rule.RuleModule = {
             messageId: 'redundantImport',
             data: {
               importText: diagnostic.importText,
-              resolvedFile: diagnostic.resolvedFile,
-              entryFile: diagnostic.entryFile,
-              firstImporter: diagnostic.firstSeen.importerFile,
+              resolvedFile: toProjectRelativePath(diagnostic.resolvedFile),
+              entryFile: toProjectRelativePath(diagnostic.entryFile),
+              firstImporter: toProjectRelativePath(diagnostic.firstSeen.importerFile),
               firstLine: String(diagnostic.firstSeen.loc.line),
               cycleSuffix: diagnostic.cycle ? ' Cycle detected in the dependency chain.' : '',
             },

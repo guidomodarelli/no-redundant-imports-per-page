@@ -8,7 +8,7 @@ import plugin, { clearAnalysisCache } from '../../src';
 const workspaceRoot = path.resolve(__dirname, '../fixtures/workspace');
 
 const getFixturePath = (...segments: string[]): string =>
-  path.join(workspaceRoot, ...segments).split(path.sep).join('/');
+  path.join(...segments).split(path.sep).join('/');
 
 const lintFile = async (...segments: string[]) => {
   clearAnalysisCache();
